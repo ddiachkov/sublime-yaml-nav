@@ -1,0 +1,7 @@
+[
+  { "keys": [ "super+r" ], "command": "goto_yaml_symbol", "context":
+      [
+        { "key": "selector", "operator": "equal", "operand": "source.yaml" }
+      ]
+  }
+]

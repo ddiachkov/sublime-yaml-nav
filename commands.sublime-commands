@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "YAML Nav: Goto Symbol",
+        "command": "goto_yaml_symbol"
+    }
+]
