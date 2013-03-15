@@ -2,7 +2,7 @@
 
 Simple plugin for quick navigating in YAML files.
 
-![screenshot][screenshot]
+![screenshot](screenshot.png)
 
 ## Installation
 
