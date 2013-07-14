@@ -1,6 +1,6 @@
-# Sublime Text 2 plugin: YAML Nav
+# YAML Nav
 
-Simple plugin for quick navigation in YAML files.
+Sublime Text 2/3 plugin for quick navigation in YAML files.
 
 ![screenshot](screenshot.png)
 
