@@ -1,10 +1,13 @@
-import sublime, sublime_plugin
+import sublime
+import sublime_plugin
+
 
 class GotoYamlSymbolCommand(sublime_plugin.WindowCommand):
     def run(self):
         self.view = self.window.active_view()
         self.symbols = self.get_yaml_symbols()
-        self.window.show_quick_panel(map(lambda x: x["name"], self.symbols), self.on_symbol_selected)
+        self.window.show_quick_panel(list(map(lambda x: x["name"], self.symbols)), self.on_symbol_selected)
+
 
     def on_symbol_selected(self, index):
         if index >= 0:
@@ -35,8 +38,8 @@ class GotoYamlSymbolCommand(sublime_plugin.WindowCommand):
             ident_level = region.begin() - line.begin()
 
             # Pop items from current_path while its indentation level less than current key indentation
-            while len(current_path) > 0 and current_path[-1][ "ident" ] >= ident_level:
-              current_path.pop()
+            while len(current_path) > 0 and current_path[-1]["ident"] >= ident_level:
+                current_path.pop()
 
             current_path.append({"key": key, "ident": ident_level})
 
