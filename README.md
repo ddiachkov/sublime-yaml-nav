@@ -6,18 +6,26 @@ Sublime Text 2/3 plugin for quick navigation in YAML files.
 
 ## Installation
 
+### With Package Control
+
+See http://wbond.net/sublime_packages/package_control/installation for instructions.
+
+Open the palette (Control+Shift+P or Command+Shift+P) in Sublime Text and select Package Control: Install Package and then select YAML Nav from the list.
+
+### Manually
+
  * cd <YOUR PACKAGES DIRECTORY> (eg. ~/Library/Application\ Support/Sublime\ Text\ 2/Packages)
  * git clone http://github.com/ddiachkov/sublime-yaml-nav
 
 ## Key bindings
 
-Command + r (Control + r) in YAML file will run "goto_yaml_symbol" command.
+Command+r (Control+r) in YAML source will run "goto_yaml_symbol" command.
 
 ## Licence
 
 All of YAML Nav is licensed under the MIT licence.
 
-  Copyright (c) 2013 Denis Diachkov
+  Copyright (c) 2013-2014 Denis Diachkov
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
