@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 
+current_symbol = None
 
 def get_yaml_symbols(view):
     """
@@ -57,6 +58,7 @@ class DisplayYamlPathCommand(sublime_plugin.WindowCommand):
     Displays YAML symbol in focus.
     """
     def run(self):
+        global current_symbol
         view = self.window.active_view()
         selection = view.sel()
 
@@ -73,20 +75,34 @@ class DisplayYamlPathCommand(sublime_plugin.WindowCommand):
 
                 for symbol in yaml_symbols:
                     if cursor_line.intersects(symbol["region"]):
-                        self.display_message(symbol["name"])
+                        current_symbol = symbol["name"]
+                        display_message(current_symbol)
                         return
             else:
-                self.display_message("multiple lines!")
+                display_message("multiple lines!")
 
         else:
-            self.display_message("multiple cursors!")
+            display_message("multiple cursors!")
 
-    def display_message(self, message):
-        self.window.active_view().set_status("yaml_path", "YAML path: %s" % message)
+class CopyYamlSymbolToClipboardCommand(sublime_plugin.WindowCommand):
+    """
+    Copies selected symbol into clipboard.
+    """
+    def run(self):
+        global current_symbol
 
+        if len(current_symbol) > 0:
+            sublime.set_clipboard(current_symbol)
+            display_message("%s - copied to clipboard!" % current_symbol)
+        else:
+            display_message("nothing selected!")
+
+def display_message(message):
+    sublime.active_window().active_view().set_status("yaml_path", "YAML path: %s" % message)
 
 class YamlNavListener(sublime_plugin.EventListener):
     def on_selection_modified_async(self, view):
         # Only if current buffer contains YAML
         if view.score_selector(0, "source.yaml") > 0:
             sublime.active_window().run_command("display_yaml_path")
+            

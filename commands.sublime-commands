@@ -2,5 +2,9 @@
     {
         "caption": "YAML Nav: Goto Symbol",
         "command": "goto_yaml_symbol"
+    },
+    {
+        "caption": "YAML Nav: Copy Symbol To Clipboard"
+        "command": "copy_yaml_symbol_to_clipboard"
     }
 ]

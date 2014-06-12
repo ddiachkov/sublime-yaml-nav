@@ -3,5 +3,11 @@
       [
         { "key": "selector", "operator": "equal", "operand": "source.yaml" }
       ]
+  },
+
+  { "keys": [ "super+shift+w" ], "command": "copy_yaml_symbol_to_clipboard", "context":
+      [ 
+        { "key": "selector", "operator": "equal", "operand": "source.yaml" }
+      ]
   }
 ]
