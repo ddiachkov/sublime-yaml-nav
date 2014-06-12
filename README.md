@@ -20,6 +20,7 @@ Open the palette (Control+Shift+P or Command+Shift+P) in Sublime Text and select
 ## Key bindings
 
 Command+R (Control+R) in YAML source will run "goto_yaml_symbol" command.
+
 Command+Shift+W (Control+Shift+W) in YAML source will run "copy_yaml_symbol_to_clipboard" command.
 
 ## Licence
