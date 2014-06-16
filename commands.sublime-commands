@@ -4,7 +4,7 @@
         "command": "goto_yaml_symbol"
     },
     {
-        "caption": "YAML Nav: Copy Symbol To Clipboard"
+        "caption": "YAML Nav: Copy Symbol To Clipboard",
         "command": "copy_yaml_symbol_to_clipboard"
     }
 ]

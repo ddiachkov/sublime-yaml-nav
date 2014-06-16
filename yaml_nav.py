@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 
+# Global var with current symbol; updated in YamlNavListener
 current_symbol = None
 
 def get_yaml_symbols(view):
@@ -33,6 +34,71 @@ def get_yaml_symbols(view):
     return symbols
 
 
+def get_current_yaml_symbol(view):
+    """
+    Returns current YAML key path for currently selected region in given view.
+    """
+
+    selection = view.sel()
+
+    # 1 cursor
+    if len(selection) == 1:
+        selected_lines = view.lines(selection[0])
+
+        # 1 selected line
+        if len(selected_lines) == 1:
+            cursor_line = selected_lines[0]
+
+            # Reversing list because we are searching for the deepest key
+            yaml_symbols = reversed(get_yaml_symbols(view))
+
+            for symbol in yaml_symbols:
+                if cursor_line.intersects(symbol["region"]):
+                    return symbol["name"]
+
+            return None
+
+        else:
+            # Ambigous symbol: multiple lines selected
+            return None
+
+    else:
+        # Ambigous symbol: multiple cursors
+        return None
+
+def display_message(message):
+    """
+    Displays given message in the status bar.
+    """
+
+    if message:
+        sublime.active_window().active_view().set_status("yaml_path", "YAML path: %s" % message)
+    else:
+        sublime.active_window().active_view().erase_status("yaml_path")
+
+
+class YamlNavListener(sublime_plugin.EventListener):
+    """
+    Listens for cursor movement and updates current YAML symbol.
+    """
+
+    def on_selection_modified_async(self, view):
+        global current_symbol
+
+        # Only if current buffer contains YAML
+        if view.score_selector(0, "source.yaml") > 0:
+            current_symbol = get_current_yaml_symbol(view)
+            sublime.active_window().run_command("display_yaml_path")
+
+
+class DisplayYamlPathCommand(sublime_plugin.WindowCommand):
+    """
+    Displays current YAML symbol.
+    """
+    def run(self):
+        global current_symbol
+        display_message(current_symbol)
+
 class GotoYamlSymbolCommand(sublime_plugin.WindowCommand):
     """
     Opens quick panel with YAML symbols.
@@ -52,37 +118,11 @@ class GotoYamlSymbolCommand(sublime_plugin.WindowCommand):
             self.view.sel().clear()
             self.view.sel().add(sublime.Region(region.end() + 1))
 
-
-class DisplayYamlPathCommand(sublime_plugin.WindowCommand):
-    """
-    Displays YAML symbol in focus.
-    """
-    def run(self):
-        global current_symbol
-        view = self.window.active_view()
-        selection = view.sel()
-
-        # 1 cursor
-        if len(selection) == 1:
-            selected_lines = view.lines(selection[0])
-
-            # 1 selected line
-            if len(selected_lines) == 1:
-                cursor_line = selected_lines[0]
-
-                # Need to reverse -- we searching for deepest key
-                yaml_symbols = reversed(get_yaml_symbols(view))
-
-                for symbol in yaml_symbols:
-                    if cursor_line.intersects(symbol["region"]):
-                        current_symbol = symbol["name"]
-                        display_message(current_symbol)
-                        return
-            else:
-                display_message("multiple lines!")
-
-        else:
-            display_message("multiple cursors!")
+            # We need manually update current symbol because nav listener
+            # won't be triggered after we move the cursor
+            global current_symbol
+            current_symbol = self.symbols[index]["name"]
+            self.window.run_command("display_yaml_path")
 
 class CopyYamlSymbolToClipboardCommand(sublime_plugin.WindowCommand):
     """
@@ -91,18 +131,8 @@ class CopyYamlSymbolToClipboardCommand(sublime_plugin.WindowCommand):
     def run(self):
         global current_symbol
 
-        if len(current_symbol) > 0:
+        if current_symbol:
             sublime.set_clipboard(current_symbol)
             display_message("%s - copied to clipboard!" % current_symbol)
         else:
             display_message("nothing selected!")
-
-def display_message(message):
-    sublime.active_window().active_view().set_status("yaml_path", "YAML path: %s" % message)
-
-class YamlNavListener(sublime_plugin.EventListener):
-    def on_selection_modified_async(self, view):
-        # Only if current buffer contains YAML
-        if view.score_selector(0, "source.yaml") > 0:
-            sublime.active_window().run_command("display_yaml_path")
-            
