@@ -4,11 +4,15 @@ Main plugin module with sublime commands and listeners.
 
 import sublime
 import sublime_plugin
+import re
 
 from . import yaml_math, view_data
 
 # Status key for sublime status bar
 STATUS_BAR_ID = "yaml_nav"
+
+# Filename with plugin settings
+SETTINGS_FILE = "YAML Nav.sublime-settings"
 
 
 def set_status(view, message):
@@ -122,6 +126,14 @@ class GotoYamlSymbolCommand(sublime_plugin.TextCommand):
 
 
 class CopyYamlSymbolToClipboardCommand(sublime_plugin.TextCommand):
+    def __init__(self, *args):
+        sublime_plugin.TextCommand.__init__(self, *args)
+
+        # Load settings
+        self.settings = sublime.load_settings(SETTINGS_FILE)
+        self.detect_locale_filename_re = re.compile(self.settings.get("detect_locale_filename_re"), re.I)
+        self.trim_language_tag_on_copy_from_locales = self.settings.get("trim_language_tag_on_copy_from_locales")
+
     """
     Copies selected YAML symbol into clipboard.
     """
@@ -129,10 +141,23 @@ class CopyYamlSymbolToClipboardCommand(sublime_plugin.TextCommand):
         current_symbol = view_data.get(self.view).current_yaml_symbol
 
         if current_symbol:
-            sublime.set_clipboard(current_symbol["name"])
-            set_status(self.view, "%s - copied to clipboard!" % current_symbol["name"])
+            current_symbol_name = current_symbol["name"]
+
+            # Automatically detect localization YAML and trim first tag
+            # (if enabled in settings)
+            if self.trim_language_tag_on_copy_from_locales and self.is_locale_file():
+                current_symbol_name = re.sub("^(.+?)\\.", "", current_symbol_name)
+
+            sublime.set_clipboard(current_symbol_name)
+            set_status(self.view, "%s - copied to clipboard!" % current_symbol_name)
         else:
             set_status(self.view, "nothing selected - can't copy!")
 
     def is_enabled(self):
         return is_yaml_view(self.view)
+
+    def is_locale_file(self):
+        """
+        Returns true if current file is localization file.
+        """
+        return self.detect_locale_filename_re.search(self.view.file_name()) is not None

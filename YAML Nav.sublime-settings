@@ -1,0 +1,9 @@
+{
+    // Automatically detect localization YAML's and trim first tag on copy.
+    // e.g. en.active_record.attributes... --> active_record.attributes...
+    "trim_language_tag_on_copy_from_locales": true,
+
+    // Regexp to detect locale file paths.
+    // e.g. config/locales/en.yml is file with localization, config/database.yml - is not.
+    "detect_locale_filename_re": "(\\/|\\\\)locales?(\\/|\\\\|\\.)"
+}

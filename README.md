@@ -1,6 +1,6 @@
 # YAML Nav
 
-Sublime Text 2/3 plugin for quick navigation in YAML files.
+Sublime Text 3 plugin for quick navigation in YAML files.
 
 ![screenshot](screenshot.png)
 
@@ -10,11 +10,11 @@ Sublime Text 2/3 plugin for quick navigation in YAML files.
 
 See http://wbond.net/sublime_packages/package_control/installation for instructions.
 
-Open the palette (Control+Shift+P or Command+Shift+P) in Sublime Text and select Package Control: Install Package and then select YAML Nav from the list.
+Open the palette (Control+Shift+P or Command+Shift+P) in Sublime Text and select Package Control: Install Package and then select "YAML Nav" from the list.
 
 ### Manually
 
- * cd <YOUR PACKAGES DIRECTORY> (eg. ~/Library/Application\ Support/Sublime\ Text\ 2/Packages)
+ * cd <YOUR PACKAGES DIRECTORY> (eg. ~/Library/Application\ Support/Sublime\ Text\ 3/Packages)
  * git clone http://github.com/ddiachkov/sublime-yaml-nav
 
 ## Key bindings
@@ -22,6 +22,12 @@ Open the palette (Control+Shift+P or Command+Shift+P) in Sublime Text and select
 Command+R (Control+R) in YAML source will run "goto_yaml_symbol" command.
 
 Command+Shift+W (Control+Shift+W) in YAML source will run "copy_yaml_symbol_to_clipboard" command.
+
+## Localization YAML's
+
+Since version 1.2.0 YAML Nav tries to detect YAML's with localization data (ie. Rails locales) and automatically strips first tag when symbol is copied to the clipboard (Command+Shift+W). For example "en.active_record.attributes.entity.name" will be copied as "active_record.attributes.entity.name".
+
+This behavior can be disabled by setting ```"trim_language_tag_on_copy_from_locales": false``` in configuration file ("YAML Nav.sublime-settings").
 
 ## Licence
 
