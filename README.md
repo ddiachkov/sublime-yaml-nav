@@ -25,7 +25,7 @@ Command+Shift+W (Control+Shift+W) in YAML source will run "copy_yaml_symbol_to_c
 
 ## Localization YAML's
 
-Since version 1.2.0 YAML Nav tries to detect YAML's with localization data (ie. Rails locales) and automatically strips first tag when symbol is copied to the clipboard (Command+Shift+W). For example "en.active_record.attributes.entity.name" will be copied as "active_record.attributes.entity.name".
+Since version 1.2.0 YAML Nav tries to detect YAML's with localization data (ie. Rails locales) and automatically strips first tag when symbol is copied to the clipboard (Super+Shift+W). For example "en.active_record.attributes.entity.name" will be copied as "active_record.attributes.entity.name".
 
 This behavior can be disabled by setting ```"trim_language_tag_on_copy_from_locales": false``` in configuration file ("YAML Nav.sublime-settings").
 
