@@ -1,3 +1,7 @@
+# 1.3.0
+- Added workaround to avoid memory leak in ST3 (unfortunately with minor performance degradation);
+- Restored ST2 compatibility;
+
 # 1.2.0
 - First tag is now automatically trimmed when symbol copied from localization file;
 - Symbol list is now cached;
