@@ -3,8 +3,12 @@ This module provides functions for calculating YAML symbols.
 """
 
 import sublime
-import threading
-import queue
+
+try:
+    from . import utils
+except:
+    # ST2
+    import utils
 
 
 def get_yaml_symbols(view):
@@ -71,39 +75,18 @@ def get_view_regions(view, selector):
     """
     Returns regions for given selector in given view.
     """
-    return execute_in_sublime_main_thread(lambda: view.find_by_selector( selector ))
+    return utils.execute_in_sublime_main_thread(lambda: view.find_by_selector( selector ))
 
 
 def get_view_content(view):
     """
     Returns view content as string.
     """
-    return execute_in_sublime_main_thread(lambda: view.substr(sublime.Region(0, view.size())))
+    return utils.execute_in_sublime_main_thread(lambda: view.substr(sublime.Region(0, view.size())))
 
 
 def get_view_selected_lines(view):
     """
     Returns selected lines as regions in given view.
     """
-    return execute_in_sublime_main_thread(lambda: [line for sel in view.sel() for line in view.lines(sel)])
-
-
-# Main sublime thread
-MAIN_THREAD = threading.current_thread()
-
-
-def execute_in_sublime_main_thread(callback):
-    """
-    Executes callback in main sublime thread and returns its result.
-    This is needed to mitigate memory leak in plugin_host.
-    See https://github.com/DamnWidget/anaconda/issues/97
-    """
-
-    # If we already in main thread then just call th callback,
-    # otherwise block current thread and schedule callback in main thread
-    if threading.current_thread() == MAIN_THREAD:
-        return callback()
-    else:
-        q = queue.Queue()
-        sublime.set_timeout(lambda: q.put(callback()), 0)
-        return q.get(block=True)
+    return utils.execute_in_sublime_main_thread(lambda: [line for sel in view.sel() for line in view.lines(sel)])

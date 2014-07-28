@@ -7,7 +7,15 @@ import sublime_plugin
 import re
 import time
 
-from . import yaml_math, view_data, worker
+try:
+    from . import yaml_math, view_data, worker, utils
+except:
+    # ST2
+    import yaml_math
+    import view_data
+    import worker
+    import utils
+
 
 # Status key for sublime status bar
 STATUS_BAR_ID = "yaml_nav"
@@ -25,9 +33,11 @@ def set_status(view, message):
     """
 
     if message:
-        view.set_status(STATUS_BAR_ID, "YAML path: %s" % message)
+        utils.execute_in_sublime_main_thread(
+            lambda: view.set_status(STATUS_BAR_ID, "YAML path: %s" % message))
     else:
-        view.erase_status(STATUS_BAR_ID)
+        utils.execute_in_sublime_main_thread(
+            lambda: view.erase_status(STATUS_BAR_ID))
 
 
 def is_yaml_view(view):
@@ -109,12 +119,12 @@ class YamlNavListener(sublime_plugin.EventListener):
                 worker.execute(do_update)
             else:
                 view_data.set(view, "symbols_update_scheduled", True)
-                sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
+                sublime.set_timeout(schedule_update, int(UPDATE_SYMBOLS_DELAY * 1000))
 
         # Schedule update unless it already scheduled
         if not view_data.get(view, "symbols_update_scheduled"):
             view_data.set(view, "symbols_update_scheduled", True)
-            sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
+            sublime.set_timeout(schedule_update, int(UPDATE_SYMBOLS_DELAY * 1000))
 
     def update_current_yaml_symbol(self, view):
         """
@@ -157,7 +167,8 @@ class GotoYamlSymbolCommand(sublime_plugin.TextCommand):
                 self.view.sel().clear()
                 self.view.sel().add(sublime.Region(region.end() + 1))
 
-        self.view.window().show_quick_panel(list(map(lambda x: x["name"], symbols)), on_symbol_selected)
+        self.view.window().show_quick_panel(
+            list(map(lambda x: x["name"], symbols)), on_symbol_selected)
 
     def is_enabled(self):
         return is_yaml_view(self.view)

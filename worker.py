@@ -2,7 +2,12 @@
 Module for executing tasks in separate thread.
 """
 
-import queue
+try:
+    from queue import Queue
+except:
+    # ST2, Python 2
+    from Queue import Queue
+
 import threading
 import traceback
 
@@ -13,7 +18,7 @@ class Worker:
     """
 
     def __init__(self):
-        self.q = queue.Queue()
+        self.q = Queue()
         self.running = False
 
     def start(self):
