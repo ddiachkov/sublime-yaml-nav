@@ -5,14 +5,18 @@ Main plugin module with sublime commands and listeners.
 import sublime
 import sublime_plugin
 import re
+import time
 
-from . import yaml_math, view_data
+from . import yaml_math, view_data, worker
 
 # Status key for sublime status bar
 STATUS_BAR_ID = "yaml_nav"
 
 # Filename with plugin settings
 SETTINGS_FILE = "YAML Nav.sublime-settings"
+
+# Delay in seconds after which symbols will be updated on buffer modification
+UPDATE_SYMBOLS_DELAY = 0.4
 
 
 def set_status(view, message):
@@ -40,17 +44,17 @@ class YamlNavListener(sublime_plugin.EventListener):
     YAML symbols/currently selected symbol.
     """
 
-    def on_load_async(self, view):
+    def on_load(self, view):
         if is_yaml_view(view):
             # Build list after file load
             self.update_yaml_symbols(view)
 
-    def on_new_async(self, view):
+    def on_new(self, view):
         if is_yaml_view(view):
             # Build list after new buffer created
             self.update_yaml_symbols(view)
 
-    def on_activated_async(self, view):
+    def on_activated(self, view):
         if is_yaml_view(view):
             if not view.is_loading() and not view_data.get(view).yaml_symbols:
                 # Rebuild list after plugin reload
@@ -59,12 +63,15 @@ class YamlNavListener(sublime_plugin.EventListener):
             # Update current symbol after view change/quick navigation
             self.update_current_yaml_symbol(view)
 
-    def on_modified_async(self, view):
+    def on_modified(self, view):
         if is_yaml_view(view):
+            # Save modification time to throttle symbols update
+            view_data.get(view).modified_at = time.time()
+
             # Rebuild list after file modification
             self.update_yaml_symbols(view)
 
-    def on_selection_modified_async(self, view):
+    def on_selection_modified(self, view):
         if is_yaml_view(view):
             # Update current symbol after cursor movement
             self.update_current_yaml_symbol(view)
@@ -78,8 +85,39 @@ class YamlNavListener(sublime_plugin.EventListener):
         Generates YAML symbol list and saves it in the view data.
         """
 
+        def do_update():
+            """
+            Do actual symbols update in separate thread.
+            """
+
+            data = view_data.get(view)
+            data.yaml_symbols = yaml_math.get_yaml_symbols(view)
+
+            # Also update current symbol because it may be changed
+            self.update_current_yaml_symbol(view)
+
+        def schedule_update():
+            """
+            Schedules symbols update.
+            """
+
+            data = view_data.get(view)
+
+            # Update symbols if last modification was more than UPDATE_SYMBOLS_DELAY ms. ago,
+            # otherwise reschedule update
+            if not data.modified_at or time.time() - data.modified_at > UPDATE_SYMBOLS_DELAY:
+                data.symbols_update_scheduled = False
+                worker.execute(do_update)
+            else:
+                data.symbols_update_scheduled = True
+                sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
+
         data = view_data.get(view)
-        data.yaml_symbols = yaml_math.get_yaml_symbols(view)
+
+        # Schedule update unless it already scheduled
+        if not data.symbols_update_scheduled:
+            data.symbols_update_scheduled = True
+            sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
 
     def update_current_yaml_symbol(self, view):
         """

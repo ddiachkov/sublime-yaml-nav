@@ -3,6 +3,8 @@ This module provides functions for calculating YAML symbols.
 """
 
 import sublime
+import threading
+import queue
 
 
 def get_yaml_symbols(view):
@@ -12,10 +14,10 @@ def get_yaml_symbols(view):
     """
 
     # Get regions with YAML tags
-    regions = view.find_by_selector("entity.name.tag.yaml")
+    regions = get_view_regions(view, "entity.name.tag.yaml")
 
     # Read the entire buffer content into the memory: it is much much faster than multiple substr's
-    content = view.substr(sublime.Region(0, view.size()))
+    content = get_view_content(view)
 
     symbols = []
     current_path = []
@@ -47,29 +49,61 @@ def get_selected_yaml_symbol(symbols, view):
     if not symbols:
         return None
 
-    selection = view.sel()
+    selection = get_view_selected_lines(view)
 
     # 1 cursor
     if len(selection) == 1:
-        selected_lines = view.lines(selection[0])
+        # Reversing list because we are searching for the deepest key
+        yaml_symbols = reversed(symbols)
 
-        # 1 selected line
-        if len(selected_lines) == 1:
-            cursor_line = selected_lines[0]
-
-            # Reversing list because we are searching for the deepest key
-            yaml_symbols = reversed(symbols)
-
+        # Search for 1 intersection
+        for selected_region in selection:
             for symbol in yaml_symbols:
-                if cursor_line.intersects(symbol["region"]):
+                if selected_region.intersects(symbol["region"]):
                     return symbol
-
-            return None
-
-        else:
-            # Ambigous symbol: multiple lines selected
-            return None
 
     else:
         # Ambigous symbol: multiple cursors
         return None
+
+
+def get_view_regions(view, selector):
+    """
+    Returns regions for given selector in given view.
+    """
+    return execute_in_sublime_main_thread(lambda: view.find_by_selector( selector ))
+
+
+def get_view_content(view):
+    """
+    Returns view content as string.
+    """
+    return execute_in_sublime_main_thread(lambda: view.substr(sublime.Region(0, view.size())))
+
+
+def get_view_selected_lines(view):
+    """
+    Returns selected lines as regions in given view.
+    """
+    return execute_in_sublime_main_thread(lambda: [line for sel in view.sel() for line in view.lines(sel)])
+
+
+# Main sublime thread
+MAIN_THREAD = threading.current_thread()
+
+
+def execute_in_sublime_main_thread(callback):
+    """
+    Executes callback in main sublime thread and returns its result.
+    This is needed to mitigate memory leak in plugin_host.
+    See https://github.com/DamnWidget/anaconda/issues/97
+    """
+
+    # If we already in main thread then just call th callback,
+    # otherwise block current thread and schedule callback in main thread
+    if threading.current_thread() == MAIN_THREAD:
+        return callback()
+    else:
+        q = queue.Queue()
+        sublime.set_timeout(lambda: q.put(callback()), 0)
+        return q.get(block=True)
