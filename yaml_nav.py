@@ -56,7 +56,7 @@ class YamlNavListener(sublime_plugin.EventListener):
 
     def on_activated(self, view):
         if is_yaml_view(view):
-            if not view.is_loading() and not view_data.get(view).yaml_symbols:
+            if not view.is_loading() and not view_data.get(view, "yaml_symbols"):
                 # Rebuild list after plugin reload
                 self.update_yaml_symbols(view)
 
@@ -66,7 +66,7 @@ class YamlNavListener(sublime_plugin.EventListener):
     def on_modified(self, view):
         if is_yaml_view(view):
             # Save modification time to throttle symbols update
-            view_data.get(view).modified_at = time.time()
+            view_data.set(view, "modified_at", time.time())
 
             # Rebuild list after file modification
             self.update_yaml_symbols(view)
@@ -90,8 +90,7 @@ class YamlNavListener(sublime_plugin.EventListener):
             Do actual symbols update in separate thread.
             """
 
-            data = view_data.get(view)
-            data.yaml_symbols = yaml_math.get_yaml_symbols(view)
+            view_data.set(view, "yaml_symbols", yaml_math.get_yaml_symbols(view))
 
             # Also update current symbol because it may be changed
             self.update_current_yaml_symbol(view)
@@ -101,22 +100,20 @@ class YamlNavListener(sublime_plugin.EventListener):
             Schedules symbols update.
             """
 
-            data = view_data.get(view)
+            modified_at = view_data.get(view, "modified_at")
 
             # Update symbols if last modification was more than UPDATE_SYMBOLS_DELAY ms. ago,
             # otherwise reschedule update
-            if not data.modified_at or time.time() - data.modified_at > UPDATE_SYMBOLS_DELAY:
-                data.symbols_update_scheduled = False
+            if not modified_at or time.time() - modified_at > UPDATE_SYMBOLS_DELAY:
+                view_data.set(view, "symbols_update_scheduled", False)
                 worker.execute(do_update)
             else:
-                data.symbols_update_scheduled = True
+                view_data.set(view, "symbols_update_scheduled", True)
                 sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
 
-        data = view_data.get(view)
-
         # Schedule update unless it already scheduled
-        if not data.symbols_update_scheduled:
-            data.symbols_update_scheduled = True
+        if not view_data.get(view, "symbols_update_scheduled"):
+            view_data.set(view, "symbols_update_scheduled", True)
             sublime.set_timeout(schedule_update, UPDATE_SYMBOLS_DELAY * 1000)
 
     def update_current_yaml_symbol(self, view):
@@ -124,11 +121,13 @@ class YamlNavListener(sublime_plugin.EventListener):
         Calculates current selected YAML symbol and saves it in the view data.
         """
 
-        data = view_data.get(view)
-        data.current_yaml_symbol = yaml_math.get_selected_yaml_symbol(data.yaml_symbols, view)
+        all_symbols = view_data.get(view, "yaml_symbols")
+        current_yaml_symbol = yaml_math.get_selected_yaml_symbol(all_symbols, view)
 
-        if data.current_yaml_symbol:
-            set_status(view, data.current_yaml_symbol["name"])
+        view_data.set(view, "current_yaml_symbol", current_yaml_symbol)
+
+        if current_yaml_symbol:
+            set_status(view, current_yaml_symbol["name"])
         else:
             set_status(view, None)
 
@@ -144,8 +143,9 @@ class GotoYamlSymbolCommand(sublime_plugin.TextCommand):
     """
     Opens quick panel with YAML symbols.
     """
+
     def run(self, edit):
-        symbols = view_data.get(self.view).yaml_symbols or []
+        symbols = view_data.get(self.view, "yaml_symbols") or []
 
         def on_symbol_selected(index):
             if index >= 0:
@@ -172,11 +172,12 @@ class CopyYamlSymbolToClipboardCommand(sublime_plugin.TextCommand):
         self.detect_locale_filename_re = re.compile(self.settings.get("detect_locale_filename_re"), re.I)
         self.trim_language_tag_on_copy_from_locales = self.settings.get("trim_language_tag_on_copy_from_locales")
 
-    """
-    Copies selected YAML symbol into clipboard.
-    """
     def run(self, edit):
-        current_symbol = view_data.get(self.view).current_yaml_symbol
+        """
+        Copies selected YAML symbol into clipboard.
+        """
+
+        current_symbol = view_data.get(self.view, "current_yaml_symbol")
 
         if current_symbol:
             current_symbol_name = current_symbol["name"]
@@ -198,4 +199,5 @@ class CopyYamlSymbolToClipboardCommand(sublime_plugin.TextCommand):
         """
         Returns true if current file is localization file.
         """
+
         return self.detect_locale_filename_re.search(self.view.file_name()) is not None
