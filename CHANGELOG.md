@@ -1,3 +1,6 @@
+# 1.3.1
+- Added custom YAML syntax definition to support YAML keys with dashes and other non-alphanum symbols;
+
 # 1.3.0
 - Added workaround to avoid memory leak in ST3 (unfortunately with minor performance degradation);
 - Restored ST2 compatibility;
