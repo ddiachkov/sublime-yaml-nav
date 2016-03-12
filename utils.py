@@ -23,11 +23,11 @@ def execute_in_sublime_main_thread(callback):
     See https://github.com/DamnWidget/anaconda/issues/97
     """
 
-    # If we already in main thread then just call th callback,
-    # otherwise block current thread and schedule callback in main thread
     if threading.current_thread() == MAIN_THREAD:
+        # If we already in the main thread then execute callback immediately
         return callback()
     else:
+        # Schedule callback in the main thread and block current thread
         q = Queue()
         sublime.set_timeout(lambda: q.put(callback()), 0)
         return q.get(block=True)

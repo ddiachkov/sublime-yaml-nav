@@ -1,3 +1,7 @@
+# 1.3.2
+- Added new YAML syntax definition from https://github.com/sublimehq/Packages/pull/90;
+- Fixed trimmed charracter;
+
 # 1.3.1
 - Added custom YAML syntax definition to support YAML keys with dashes and other non-alphanum symbols;
 

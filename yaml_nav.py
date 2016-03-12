@@ -51,18 +51,20 @@ def is_yaml_view(view):
 class YamlNavListener(sublime_plugin.EventListener):
     """
     Listens for file modification/cursor movement and updates list of
-    YAML symbols/currently selected symbol.
+    YAML symbols and currently selected symbol.
     """
 
     def on_load(self, view):
         if is_yaml_view(view):
+            # Force our custom syntax
+            print("force yaml-ng")
+            view.set_syntax_file("Packages/YAML Nav/YAML-ng.sublime-syntax")
+
             # Build list after file load
             self.update_yaml_symbols(view)
 
     def on_new(self, view):
-        if is_yaml_view(view):
-            # Build list after new buffer created
-            self.update_yaml_symbols(view)
+        self.on_load(self, view)
 
     def on_activated(self, view):
         if is_yaml_view(view):

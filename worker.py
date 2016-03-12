@@ -23,7 +23,7 @@ class Worker:
 
     def start(self):
         """
-        Starts  worker thread.
+        Starts worker thread.
         """
 
         if not self.running:
@@ -69,7 +69,7 @@ def execute(callback):
 
     global __worker
 
-    # Creating worker on demand
+    # Create worker on demand
     if not __worker:
         __worker = Worker()
         __worker.start()

@@ -1,8 +1,5 @@
 """
-Helper module to attach custom data to a sublime view instances.
-
-Unfortunately sublime don't allows us to add custom attributes to views,
-so we need some kind of external storage.
+Helper module to attach custom data to sublime views.
 """
 
 from collections import defaultdict
@@ -20,7 +17,7 @@ __view_data = defaultdict(lambda: defaultdict(None))
 
 def get(view, key):
     """
-    Returns data for given view.
+    Returns data for the given view.
     """
 
     return __view_data[view_id(view)].get(key)
@@ -28,7 +25,7 @@ def get(view, key):
 
 def set(view, key, value):
     """
-    Sets data for given view.
+    Sets data for the given view.
     """
 
     __view_data[view_id(view)][key] = value
@@ -36,7 +33,7 @@ def set(view, key, value):
 
 def clear(view):
     """
-    Clears data for given view.
+    Clears data for the given view.
     """
 
     vid = view_id(view)

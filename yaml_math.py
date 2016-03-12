@@ -1,5 +1,5 @@
 """
-This module provides functions for calculating YAML symbols.
+This module provides functions for extracting YAML symbols.
 """
 
 import sublime
@@ -20,14 +20,14 @@ def get_yaml_symbols(view):
     # Get regions with YAML tags
     regions = get_view_regions(view, "entity.name.tag.yaml")
 
-    # Read the entire buffer content into the memory: it is much much faster than multiple substr's
+    # Read the entire buffer content into the memory: it's much much faster than multiple substr's
     content = get_view_content(view)
 
     symbols = []
     current_path = []
 
     for region in regions:
-        key = content[region.begin():region.end() - 1]
+        key = content[region.begin():region.end()]
 
         # Characters count from line beginning to key start position
         indent_level = region.begin() - content.rfind("\n", 0, region.begin()) - 1
