@@ -1,3 +1,6 @@
+# 1.4.0
+- Automatically trim colons in keys if trim_leading_colon = true;
+
 # 1.3.2
 - Added new YAML syntax definition from https://github.com/sublimehq/Packages/pull/90;
 - Fixed trimmed charracter;

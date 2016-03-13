@@ -5,5 +5,9 @@
 
     // Regexp to detect locale file paths.
     // e.g. config/locales/en.yml is file with localization, config/database.yml - is not.
-    "detect_locale_filename_re": "(\\/|\\\\)locales?(\\/|\\\\|\\.)"
+    "detect_locale_filename_re": "(\\/|\\\\)locales?(\\/|\\\\|\\.)",
+
+    // Automatically trim leading colon from symbols.
+    // e.g. :foo.:bar --> foo.bar
+    "trim_leading_colon": true
 }

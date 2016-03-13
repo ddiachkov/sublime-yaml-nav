@@ -48,16 +48,26 @@ def is_yaml_view(view):
     return view.score_selector(0, "source.yaml") > 0
 
 
+def get_setting(key):
+    """
+    Returns setting value with given key.
+    """
+
+    return sublime.load_settings(SETTINGS_FILE).get(key)
+
+
 class YamlNavListener(sublime_plugin.EventListener):
     """
     Listens for file modification/cursor movement and updates list of
     YAML symbols and currently selected symbol.
     """
 
+    # Regexp to remove leading colon in symbol paths
+    REMOVE_COLON_RE = re.compile(r"((?<=(^)):|((?<=(\.)):))")
+
     def on_load(self, view):
         if is_yaml_view(view):
             # Force our custom syntax
-            print("force yaml-ng")
             view.set_syntax_file("Packages/YAML Nav/YAML-ng.sublime-syntax")
 
             # Build list after file load
@@ -102,9 +112,18 @@ class YamlNavListener(sublime_plugin.EventListener):
             Do actual symbols update in separate thread.
             """
 
-            view_data.set(view, "yaml_symbols", yaml_math.get_yaml_symbols(view))
+            # Extract symbols
+            symbols = yaml_math.get_yaml_symbols(view)
 
-            # Also update current symbol because it may be changed
+            # Remove leading colons when setting trim_leading_colon = true
+            if get_setting("trim_leading_colon"):
+                for symbol in symbols:
+                    symbol["name"] = self.REMOVE_COLON_RE.sub("", symbol["name"])
+
+            # Save symbols
+            view_data.set(view, "yaml_symbols", symbols)
+
+            # Also update current symbol because it may have changed
             self.update_current_yaml_symbol(view)
 
         def schedule_update():
@@ -181,9 +200,8 @@ class CopyYamlSymbolToClipboardCommand(sublime_plugin.TextCommand):
         sublime_plugin.TextCommand.__init__(self, *args)
 
         # Load settings
-        self.settings = sublime.load_settings(SETTINGS_FILE)
-        self.detect_locale_filename_re = re.compile(self.settings.get("detect_locale_filename_re"), re.I)
-        self.trim_language_tag_on_copy_from_locales = self.settings.get("trim_language_tag_on_copy_from_locales")
+        self.detect_locale_filename_re = re.compile(get_setting("detect_locale_filename_re"), re.I)
+        self.trim_language_tag_on_copy_from_locales = get_setting("trim_language_tag_on_copy_from_locales")
 
     def run(self, edit):
         """
